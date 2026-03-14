@@ -3,20 +3,24 @@
 # Tech Challenge · PosTech IA para Devs
 #
 # Este arquivo contém a interface visual da aplicação construída com Streamlit.
-# O algoritmo genético está nos módulos da pasta /ga:
-#   - ga/algorithm.py  → execução do algoritmo geração a geração
-#   - ga/fitness.py    → cálculo de distância e aptidão de cada rota
-#   - ga/cities.py     → geração aleatória de pontos ou carregamento do att48
+# O algoritmo genético está nos módulos da pasta /src/ga:
+#   - src/ga/algorithm.py  → execução do algoritmo geração a geração
+#   - src/ga/fitness.py    → cálculo de distância e aptidão de cada rota
+#   - src/ga/cities.py     → geração aleatória de pontos ou carregamento do att48
 # =============================================================================
+
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import streamlit as st
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import time
 
-from ga.algorithm import run_ga_visual
-from ga.fitness import calculate_distance, calculate_distance_att, calculate_fitness
-from ga.cities import generate_cities, load_att48
+from algorithm import run_ga_visual
+from fitness import calculate_distance, calculate_distance_att, calculate_fitness
+from cities import generate_cities, load_att48
 
 
 # =============================================================================

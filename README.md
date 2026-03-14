@@ -16,7 +16,7 @@ Sistema de otimização de rotas para coleta e entrega de suprimentos médicos e
 
 ## 📊 Resultados
 
-![Resultado da otimização](docs/resultado.png)
+![Resultado da otimização](src/results/resultado.png)
 
 | Métrica | Valor |
 |---|---|
@@ -36,33 +36,25 @@ Sistema de otimização de rotas para coleta e entrega de suprimentos médicos e
 ```
 otimizacao-rotas-hospitalares/
 │
-├── app.py                  # Aplicação principal (Streamlit)
 ├── requirements.txt        # Dependências do projeto
 │
-├── ga/                     # Módulo do Algoritmo Genético
-│   ├── algorithm.py        # Loop principal do GA
-│   ├── cities.py           # Definição das cidades/hospitais
-│   ├── crossover.py        # Operadores de crossover
-│   ├── fitness.py          # Função de aptidão (distância total)
-│   ├── mutation.py         # Operadores de mutação
-│   ├── population.py       # Inicialização e gestão da população
-│   └── selection.py        # Seleção por torneio (tournament selection)
-│
-├── src/
-│   ├── config/             # Configurações do projeto
-│   ├── ga/                 # Scripts de teste e configuração do GA
-│   │   ├── main.py
-│   │   ├── config.py
-│   │   └── test.py
-│   ├── llm/                # Integração com LLM
-│   ├── modeling/           # Modelagem do problema
-│   ├── notebooks/          # Jupyter Notebooks de experimentos
-│   ├── experiments/        # Experimentos e variações de parâmetros
-│   ├── results/            # Resultados salvos
-│   └── visualization/      # Geração de gráficos e visualizações
-│
-└── docs/
-    └── resultado.png       # Captura do resultado final da otimização
+└── src/
+    ├── config/             # Configurações do projeto
+    ├── ga/                 # Módulo do Algoritmo Genético + aplicação
+    │   ├── app.py          # Aplicação principal (Streamlit)
+    │   ├── algorithm.py    # Loop principal do GA
+    │   ├── cities.py       # Definição das cidades/hospitais
+    │   ├── crossover.py    # Operadores de crossover
+    │   ├── fitness.py      # Função de aptidão (distância total)
+    │   ├── mutation.py     # Operadores de mutação
+    │   ├── population.py   # Inicialização e gestão da população
+    │   └── selection.py    # Seleção por torneio (tournament selection)
+    ├── llm/                # Integração com LLM
+    ├── modeling/           # Modelagem do problema
+    ├── experiments/        # Experimentos e variações de parâmetros
+    ├── results/            # Resultados salvos
+    │   └── resultado.png   # Captura do resultado final da otimização
+    └── visualization/      # Geração de gráficos e visualizações
 ```
 
 ---
@@ -105,7 +97,7 @@ pip install -r requirements.txt
 ### Interface Web (Streamlit)
 
 ```bash
-streamlit run app.py
+streamlit run src/ga/app.py
 ```
 
 Acesse `http://localhost:8501` no navegador.
@@ -113,7 +105,7 @@ Acesse `http://localhost:8501` no navegador.
 ### Execução direta do Algoritmo Genético
 
 ```bash
-python ga/algorithm.py
+python src/ga/algorithm.py
 ```
 
 ---

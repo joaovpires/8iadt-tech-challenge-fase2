@@ -11,7 +11,7 @@
 
 import random
 import math
-from .fitness import calculate_distance
+from fitness import calculate_distance
 
 
 # =============================================================================
