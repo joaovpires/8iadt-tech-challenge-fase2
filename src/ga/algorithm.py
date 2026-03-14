@@ -5,11 +5,11 @@
 # Retorna os dados de cada geração para a visualização no app.py
 # =============================================================================
 
-from population import generate_population
-from fitness import calculate_fitness
-from crossover import order_crossover
-from mutation import mutate
-from selection import tournament_selection, top_10_selection, roulette_selection
+from .population import generate_population
+from .fitness import calculate_fitness
+from .crossover import order_crossover
+from .mutation import mutate
+from .selection import tournament_selection, top_10_selection, roulette_selection
 
 
 def run_ga_visual(

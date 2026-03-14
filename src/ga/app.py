@@ -18,9 +18,9 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import time
 
-from algorithm import run_ga_visual
-from fitness import calculate_distance, calculate_distance_att, calculate_fitness
-from cities import generate_cities, load_att48
+from .algorithm import run_ga_visual
+from .fitness import calculate_distance, calculate_distance_att, calculate_fitness
+from .cities import generate_cities, load_att48
 
 
 # =============================================================================
