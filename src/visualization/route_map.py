@@ -36,7 +36,7 @@ def create_route_map(result: OptimizationResult, points: list[DeliveryPoint], ou
     route_map = folium.Map(
         location=[base.latitude, base.longitude],
         zoom_start=12,
-        tiles="OpenStreetMap",
+        tiles="CartoDB positron",
     )
 
     # Marcador do hospital base

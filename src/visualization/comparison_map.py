@@ -34,7 +34,7 @@ def create_comparison_map(
     dual_map = DualMap(
         location=[base.latitude, base.longitude],
         zoom_start=12,
-        tiles="OpenStreetMap",
+        tiles="CartoDB positron",
     )
 
     # ============================
