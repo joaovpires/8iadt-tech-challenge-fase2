@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Testes
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Saídas geradas (regeneráveis via main.py)
+output/
+
+# OS
+Thumbs.db
+.DS_Store
