@@ -1,6 +1,3 @@
-"""
-Testes end-to-end do pipeline completo.
-"""
 import os
 import json
 import pytest
@@ -81,12 +78,10 @@ class TestGeneticAlgorithm:
 
 class TestEndToEnd:
     def test_full_pipeline(self, tmp_path):
-        """Testa o pipeline completo: dados → AG → JSON de saída."""
         result = run_genetic_algorithm(
             DELIVERY_POINTS, VEHICLES,
             population_size=10, generations=10, seed=42,
         )
-        # Verifica se conseguimos gerar o JSON de resultado
         result_json = {
             "initial_distance_km": round(result.initial_distance, 2),
             "optimized_distance_km": round(result.optimized_distance, 2),
@@ -103,7 +98,6 @@ class TestEndToEnd:
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(result_json, f, ensure_ascii=False, indent=2)
 
-        # Verifica se o JSON foi salvo corretamente
         with open(json_path, "r", encoding="utf-8") as f:
             loaded = json.load(f)
         assert loaded["initial_distance_km"] > 0
@@ -112,7 +106,6 @@ class TestEndToEnd:
 
 @pytest.fixture(scope="module")
 def ga_result():
-    """Resultado compartilhado entre testes de visualização."""
     return run_genetic_algorithm(
         DELIVERY_POINTS, VEHICLES,
         population_size=10, generations=10, seed=42,

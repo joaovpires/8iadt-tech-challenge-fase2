@@ -1,8 +1,8 @@
-# Otimização de Rotas para Distribuição de Medicamentos Hospitalares
+# MedRoute — Otimização de Rotas Hospitalares
 
-**Tech Challenge — Fase 2 | Pós-graduação 8IADT — FIAP**
+Projeto desenvolvido para o Tech Challenge Fase 2 da pós-graduação 8IADT (FIAP).
 
-Sistema que utiliza **Algoritmo Genético** para otimizar rotas de veículos na distribuição de medicamentos e insumos hospitalares na região de São Paulo, resolvendo o problema conhecido como VRP (Vehicle Routing Problem).
+O objetivo é otimizar a distribuição de medicamentos para hospitais e UBSs em São Paulo usando Algoritmo Genético para resolver o VRP (Vehicle Routing Problem). O sistema reduz a distância total percorrida pelos veículos enquanto respeita restrições de capacidade e autonomia.
 
 ## Equipe
 
@@ -13,15 +13,10 @@ Sistema que utiliza **Algoritmo Genético** para otimizar rotas de veículos na 
 | Matheus | Visualização, script principal, integração e testes e2e |
 | João    | Infraestrutura e documentação |
 
-## Resultados
+## Resultados (dados de teste)
 
-Com dados de teste (15 pontos de entrega, 3 veículos):
-
-| Métrica | Valor |
-|---------|-------|
-| Distância inicial (sem otimização) | 150.37 km |
-| Distância otimizada (AG) | 110.65 km |
-| **Melhoria** | **26.4%** |
+- 15 pontos de entrega, 3 veículos
+- Distância inicial: 150.37 km → otimizada: 110.65 km (**-26.4%**)
 
 ## Estrutura do Projeto
 
@@ -52,41 +47,14 @@ tech-challenge-fase2/
     └── result.json
 ```
 
-## Como Executar
-
-### Pré-requisitos
-
-- Python 3.10+
-
-### Instalação
+## Como rodar
 
 ```bash
 pip install -r requirements.txt
-```
-
-### Execução
-
-```bash
 python main.py
 ```
 
-Os resultados serão gerados na pasta `output/`.
-
-#### Parâmetros opcionais
-
-```bash
-python main.py --pop-size 100 --generations 200 --mutation-rate 0.15 --seed 42 --output-dir output
-```
-
-| Parâmetro | Padrão | Descrição |
-|-----------|--------|-----------|
-| `--pop-size` | 50 | Tamanho da população do AG |
-| `--generations` | 100 | Número de gerações |
-| `--mutation-rate` | 0.1 | Taxa de mutação (0 a 1) |
-| `--seed` | 42 | Seed para reprodutibilidade |
-| `--output-dir` | output | Diretório de saída |
-
-### Testes
+Outputs gerados na pasta `output/`. Parâmetros opcionais: `--pop-size`, `--generations`, `--mutation-rate`, `--seed`, `--output-dir`.
 
 ```bash
 python -m pytest tests/ -v

@@ -1,7 +1,3 @@
-"""
-Mapa comparativo lado a lado: rota inicial (sem otimização) vs rota otimizada.
-Usa folium.plugins.DualMap para mostrar os dois cenários simultaneamente.
-"""
 import folium
 from folium.plugins import DualMap
 
@@ -24,11 +20,6 @@ def create_comparison_map(
     points: list[DeliveryPoint],
     output_path: str = "output/comparison_map.html",
 ) -> DualMap:
-    """
-    Cria mapa lado a lado: ANTES (ordem original) vs DEPOIS (otimizado).
-    O painel esquerdo mostra as rotas na ordem original dos dados.
-    O painel direito mostra as rotas otimizadas pelo AG.
-    """
     base = points[0]
 
     dual_map = DualMap(
@@ -37,13 +28,10 @@ def create_comparison_map(
         tiles="CartoDB positron",
     )
 
-    # ============================
-    # PAINEL ESQUERDO — Rota Inicial
-    # ============================
+    # lado esquerdo: rotas sem otimização (ordem original dos pontos)
     _add_base_marker(dual_map.m1, base, "ANTES — Rota Inicial")
     _add_delivery_markers(dual_map.m1, points)
 
-    # Rotas iniciais: mesma atribuição de veículos, mas na ordem original (sem otimizar)
     initial_routes = _build_initial_routes(result, points)
     total_initial = 0.0
     for idx, (vehicle_name, coords, dist) in enumerate(initial_routes):
@@ -58,12 +46,9 @@ def create_comparison_map(
             popup=f"<b>{vehicle_name}</b><br>Distância: {dist:.2f} km<br><i>Sem otimização</i>",
         ).add_to(dual_map.m1)
 
-    # Label com distância total
     _add_total_label(dual_map.m1, total_initial, "SEM OTIMIZAÇÃO", "#e74c3c")
 
-    # ============================
-    # PAINEL DIREITO — Rota Otimizada
-    # ============================
+    # lado direito: rotas otimizadas pelo AG
     _add_base_marker(dual_map.m2, base, "DEPOIS — Rota Otimizada")
     _add_delivery_markers(dual_map.m2, points)
 

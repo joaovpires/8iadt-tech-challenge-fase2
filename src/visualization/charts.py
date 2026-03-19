@@ -1,19 +1,11 @@
-"""
-Gráficos comparativos: antes vs depois da otimização.
-Gera gráficos de convergência, distâncias e carga dos veículos.
-"""
 import matplotlib
-matplotlib.use("Agg")  # backend não-interativo para gerar imagens
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from src.data.models import OptimizationResult
 
 
 def plot_fitness_convergence(result: OptimizationResult, output_path: str = "output/convergence.png"):
-    """
-    Gráfico de evolução do fitness ao longo das gerações.
-    Mostra como o AG melhorou a solução ao longo do tempo.
-    """
     fig, ax = plt.subplots(figsize=(10, 5))
 
     generations = list(range(1, len(result.fitness_history) + 1))
@@ -41,9 +33,6 @@ def plot_fitness_convergence(result: OptimizationResult, output_path: str = "out
 
 
 def plot_distance_comparison(result: OptimizationResult, output_path: str = "output/distance_comparison.png"):
-    """
-    Gráfico de barras comparando distância antes vs depois da otimização.
-    """
     fig, ax = plt.subplots(figsize=(8, 5))
 
     labels = ["Rota Inicial\n(sem otimização)", "Rota Otimizada\n(AG)"]
@@ -80,9 +69,6 @@ def plot_distance_comparison(result: OptimizationResult, output_path: str = "out
 
 
 def plot_vehicle_load(result: OptimizationResult, output_path: str = "output/vehicle_load.png"):
-    """
-    Gráfico mostrando carga de cada veículo vs capacidade máxima.
-    """
     fig, ax = plt.subplots(figsize=(10, 5))
 
     names = [r.vehicle.name for r in result.routes]
@@ -112,9 +98,6 @@ def plot_vehicle_load(result: OptimizationResult, output_path: str = "output/veh
 
 
 def plot_route_distances(result: OptimizationResult, output_path: str = "output/route_distances.png"):
-    """
-    Gráfico de distância percorrida por cada veículo.
-    """
     fig, ax = plt.subplots(figsize=(10, 5))
 
     names = [r.vehicle.name for r in result.routes]

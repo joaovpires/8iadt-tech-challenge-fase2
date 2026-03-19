@@ -1,12 +1,7 @@
-"""
-Visualização de rotas otimizadas em mapa interativo com Folium.
-Gera um HTML que pode ser aberto no navegador.
-"""
 import folium
 
 from src.data.models import DeliveryPoint, Route, OptimizationResult
 
-# Cores por prioridade para os marcadores
 PRIORITY_COLORS = {
     "critica": "red",
     "alta": "orange",
@@ -15,23 +10,10 @@ PRIORITY_COLORS = {
     "base": "black",
 }
 
-# Cores para as rotas de cada veículo
 ROUTE_COLORS = ["#e74c3c", "#2980b9", "#27ae60", "#8e44ad", "#f39c12", "#1abc9c"]
 
 
 def create_route_map(result: OptimizationResult, points: list[DeliveryPoint], output_path: str = "output/route_map.html") -> folium.Map:
-    """
-    Cria mapa interativo mostrando as rotas otimizadas.
-
-    Args:
-        result: Resultado da otimização com as rotas.
-        points: Lista de todos os pontos de entrega.
-        output_path: Caminho para salvar o HTML do mapa.
-
-    Returns:
-        Objeto folium.Map.
-    """
-    # Centro do mapa = hospital base
     base = points[0]
     route_map = folium.Map(
         location=[base.latitude, base.longitude],
@@ -39,14 +21,12 @@ def create_route_map(result: OptimizationResult, points: list[DeliveryPoint], ou
         tiles="CartoDB positron",
     )
 
-    # Marcador do hospital base
     folium.Marker(
         location=[base.latitude, base.longitude],
         popup=f"<b>{base.name}</b><br>DEPÓSITO",
         icon=folium.Icon(color="black", icon="plus-sign"),
     ).add_to(route_map)
 
-    # Marcadores de todos os pontos de entrega
     for p in points[1:]:
         color = PRIORITY_COLORS.get(p.priority, "gray")
         folium.Marker(
@@ -59,17 +39,15 @@ def create_route_map(result: OptimizationResult, points: list[DeliveryPoint], ou
             icon=folium.Icon(color=color, icon="info-sign"),
         ).add_to(route_map)
 
-    # Desenhar as rotas de cada veículo
     for idx, route in enumerate(result.routes):
         color = ROUTE_COLORS[idx % len(ROUTE_COLORS)]
 
-        # Montar coordenadas: base → paradas → base
+        # base -> paradas -> base
         coords = [[base.latitude, base.longitude]]
         for stop in route.stops:
             coords.append([stop.latitude, stop.longitude])
         coords.append([base.latitude, base.longitude])
 
-        # Linha da rota
         folium.PolyLine(
             locations=coords,
             weight=4,
@@ -83,7 +61,6 @@ def create_route_map(result: OptimizationResult, points: list[DeliveryPoint], ou
             ),
         ).add_to(route_map)
 
-        # Números nas paradas para indicar ordem
         for order, stop in enumerate(route.stops, start=1):
             folium.CircleMarker(
                 location=[stop.latitude, stop.longitude],
@@ -95,10 +72,7 @@ def create_route_map(result: OptimizationResult, points: list[DeliveryPoint], ou
                 popup=f"Parada #{order} - {stop.name}",
             ).add_to(route_map)
 
-    # Legenda
-    legend_html = _build_legend(result.routes)
-    route_map.get_root().html.add_child(folium.Element(legend_html))
-
+    route_map.get_root().html.add_child(folium.Element(_build_legend(result.routes)))
     route_map.save(output_path)
     print(f"Mapa salvo em: {output_path}")
     return route_map
