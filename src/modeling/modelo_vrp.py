@@ -2,12 +2,7 @@ from typing import List, Dict
 
 
 def decodificar_cromossomo(cromossomo: List[int], separador: int = -1) -> List[List[int]]:
-    """
-    Converte um cromossomo linear em múltiplas rotas (uma por veículo).
-
-    Exemplo:
-        [0, 1, -1, 2, 3] -> [[0, 1], [2, 3]]
-    """
+    
     rotas = []
     rota_atual = []
 
@@ -23,9 +18,7 @@ def decodificar_cromossomo(cromossomo: List[int], separador: int = -1) -> List[L
 
 
 def criar_entregas_exemplo() -> Dict[int, Dict]:
-    """
-    Cria um conjunto de entregas com atributos logísticos.
-    """
+    
     return {
         0: {"id": 0, "x": 10, "y": 15, "demanda": 8, "prioridade": 3},
         1: {"id": 1, "x": 22, "y": 30, "demanda": 5, "prioridade": 2},
@@ -35,9 +28,7 @@ def criar_entregas_exemplo() -> Dict[int, Dict]:
 
 
 def criar_veiculos_exemplo():
-    """
-    Cria uma lista de veículos com restrições operacionais.
-    """
+    
     return [
         {"id": "V1", "capacidade": 15, "autonomia_maxima": 80},
         {"id": "V2", "capacidade": 20, "autonomia_maxima": 100},
