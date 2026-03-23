@@ -1,4 +1,5 @@
 import folium
+from folium.plugins import AntPath
 
 from src.data.models import DeliveryPoint, Route, OptimizationResult
 
@@ -48,11 +49,13 @@ def create_route_map(result: OptimizationResult, points: list[DeliveryPoint], ou
             coords.append([stop.latitude, stop.longitude])
         coords.append([base.latitude, base.longitude])
 
-        folium.PolyLine(
+        AntPath(
             locations=coords,
-            weight=4,
+            weight=5,
             color=color,
             opacity=0.8,
+            delay=800,
+            dash_array=[20, 30],
             popup=(
                 f"<b>{route.vehicle.name}</b><br>"
                 f"Distância: {route.total_distance:.2f} km<br>"
