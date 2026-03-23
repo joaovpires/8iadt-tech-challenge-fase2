@@ -1,5 +1,5 @@
 import folium
-from folium.plugins import AntPath
+from folium.plugins import AntPath, Fullscreen, MiniMap, MousePosition
 
 from src.data.models import DeliveryPoint, Route, OptimizationResult
 
@@ -43,6 +43,9 @@ def create_route_map(result: OptimizationResult, points: list[DeliveryPoint], ou
     for idx, route in enumerate(result.routes):
         color = ROUTE_COLORS[idx % len(ROUTE_COLORS)]
 
+        # cada rota num FeatureGroup pra poder ligar/desligar no LayerControl
+        layer = folium.FeatureGroup(name=f"{route.vehicle.name} ({route.total_distance:.1f} km)")
+
         # base -> paradas -> base
         coords = [[base.latitude, base.longitude]]
         for stop in route.stops:
@@ -62,7 +65,7 @@ def create_route_map(result: OptimizationResult, points: list[DeliveryPoint], ou
                 f"Carga: {route.total_load:.1f}/{route.vehicle.capacity} kg<br>"
                 f"Paradas: {len(route.stops)}"
             ),
-        ).add_to(route_map)
+        ).add_to(layer)
 
         for order, stop in enumerate(route.stops, start=1):
             folium.CircleMarker(
@@ -73,7 +76,14 @@ def create_route_map(result: OptimizationResult, points: list[DeliveryPoint], ou
                 fill_color=color,
                 fill_opacity=0.9,
                 popup=f"Parada #{order} - {stop.name}",
-            ).add_to(route_map)
+            ).add_to(layer)
+
+        layer.add_to(route_map)
+
+    Fullscreen(position="topright").add_to(route_map)
+    MiniMap(toggle_display=True, position="bottomright").add_to(route_map)
+    MousePosition(position="bottomleft", separator=" | ", prefix="Lat/Lon:").add_to(route_map)
+    folium.LayerControl(collapsed=False).add_to(route_map)
 
     route_map.get_root().html.add_child(folium.Element(_build_legend(result.routes)))
     route_map.save(output_path)
