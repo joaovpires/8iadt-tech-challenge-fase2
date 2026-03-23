@@ -1,0 +1,44 @@
+import os
+import sys
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
+GA_DIR = os.path.join(SRC_DIR, "ga")
+
+sys.path.insert(0, SRC_DIR)
+sys.path.insert(0, GA_DIR)
+
+from vrp_models import Delivery, Vehicle
+from vrp_population import generate_vrp_population
+from vrp_fitness import calculate_vrp_fitness
+
+
+def main():
+    deliveries = [
+        Delivery(0, 50, 50, 0, 0),
+        Delivery(1, 10, 20, 10, 1),
+        Delivery(2, 20, 80, 15, 2),
+        Delivery(3, 80, 90, 12, 1),
+        Delivery(4, 60, 20, 8, 3),
+        Delivery(5, 30, 40, 7, 2),
+        Delivery(6, 70, 60, 20, 1),
+    ]
+
+    vehicles = [
+        Vehicle(1, capacity=30, max_distance=180),
+        Vehicle(2, capacity=35, max_distance=200),
+    ]
+
+    population = generate_vrp_population(
+        num_clients=len(deliveries) - 1,
+        num_vehicles=len(vehicles),
+        population_size=5,
+    )
+
+    for chromosome in population:
+        fit = calculate_vrp_fitness(chromosome, deliveries, vehicles)
+        print(chromosome, fit)
+
+
+if __name__ == "__main__":
+    main()

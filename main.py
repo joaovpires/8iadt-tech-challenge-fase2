@@ -4,7 +4,7 @@ import argparse
 
 from src.data.mock_data import DELIVERY_POINTS, VEHICLES
 from src.data.distances import build_distance_matrix
-from src.genetic_algorithm.ga_mock import run_genetic_algorithm
+from src.genetic_algorithm.ga_adapter import run_genetic_algorithm
 from src.visualization.route_map import create_route_map
 from src.visualization.comparison_map import create_comparison_map
 from src.visualization.charts import (
