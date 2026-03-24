@@ -217,6 +217,7 @@ else:  # VRP
     vehicle_capacity = st.sidebar.slider("Capacidade do veículo", 10, 200, 50)
     vehicle_max_dist = st.sidebar.slider("Autonomia máxima", 100, 1000, 400)
     max_demand       = st.sidebar.slider("Demanda máx. por entrega", 1, 30, 10)
+    delay            = st.sidebar.slider("Delay (s)", 0.0, 0.5, 0.05, key="vrp_delay")
 
 st.sidebar.markdown(
     f"<div style='border-top:1px solid {BORDER_COLOR}; margin:0.5rem 0;'></div>",
@@ -250,10 +251,9 @@ else:
                 letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.5rem;">Legenda</div>
     <div style="font-size:0.82rem; color:{TEXT_MUTED}; line-height:2;">
         <div><span style="color:{AMBER};">●</span> Depósito central</div>
-        <div><span style="color:#e05b8b;">●</span> Prioridade Alta</div>
-        <div><span style="color:{AMBER};">●</span> Prioridade Média</div>
-        <div><span style="color:{TEAL};">●</span> Prioridade Normal</div>
+        <div><span style="color:#e05b8b;">✚</span> Ponto de entrega</div>
         <div><span style="font-size:0.9rem;">━</span> Cada cor = 1 veículo</div>
+        <div><span style="color:{POP_CLR}; font-size:0.9rem;">━</span> Rotas alternativas</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -574,7 +574,7 @@ if rodar:
         start_time = time.time()
 
         with st.spinner("Executando algoritmo genético VRP..."):
-            history, best_solutions = run_ga_vrp(
+            history, best_solutions, all_evaluated = run_ga_vrp(
                 deliveries=deliveries,
                 vehicles=vehicles,
                 population_size=population,
@@ -619,22 +619,40 @@ if rodar:
         # Layout: mapa | convergência
         col1, col2 = st.columns([6, 4], vertical_alignment="top")
 
-        # --- Mapa VRP ---
-        with col1:
+        route_placeholder  = col1.empty()
+        status_placeholder = col1.empty()
+        fit_placeholder    = col2.empty()
+        bar_placeholder    = col2.empty()
+
+        import math
+        points = {d.id: d for d in deliveries}
+
+        # --- Loop de animação geração a geração ---
+        for gen in range(len(history)):
+            elapsed = time.time() - start_time
+            pct = (gen + 1) / len(history) * 100
+
+            # Mapa VRP
             fig, ax = plt.subplots(figsize=(5.5, 4.0))
             fig.patch.set_facecolor(PANEL_COLOR)
 
-            points = {d.id: d for d in deliveries}
+            # Rotas alternativas (top ~10 da população, exceto melhor)
+            for sol in all_evaluated[gen][1:11]:
+                for route in sol["routes"]:
+                    xs_alt = [points[g].x for g in route]
+                    ys_alt = [points[g].y for g in route]
+                    ax.plot(xs_alt, ys_alt, color=POP_CLR,
+                            linewidth=0.4, zorder=1, alpha=0.15)
 
-            # Desenha cada rota com a cor do veículo correspondente
-            for v_idx, route in enumerate(best["routes"]):
+            # Melhor solução da geração
+            cur_best = best_solutions[gen]
+            for v_idx, route in enumerate(cur_best["routes"]):
                 color = VEHICLE_COLORS[v_idx % len(VEHICLE_COLORS)]
                 xs_r = [points[g].x for g in route]
                 ys_r = [points[g].y for g in route]
                 ax.plot(xs_r, ys_r, color=color, linewidth=2.0,
                         zorder=3, alpha=0.85, label=f"Veículo {v_idx + 1}")
 
-                # Setas de direção
                 for si in range(len(route) - 1):
                     p1, p2 = points[route[si]], points[route[si + 1]]
                     mx, my = (p1.x + p2.x) / 2, (p1.y + p2.y) / 2
@@ -645,14 +663,15 @@ if rodar:
                                                 lw=1.0, mutation_scale=7),
                                 zorder=4)
 
-            # Desenha os pontos de entrega coloridos por prioridade
+            # Pontos de entrega
             for d in deliveries:
                 if d.id == 0:
                     continue
-                pcolor = PRIORITY_COLOR.get(d.priority, TEAL)
-                ax.scatter(d.x, d.y, s=70, marker="o",
-                           facecolor="#1a2f4a", edgecolor=pcolor,
-                           linewidth=1.5, zorder=5)
+                ax.scatter(d.x, d.y, s=60, marker="o",
+                           facecolor="#1a2f4a", edgecolor="#e05b8b",
+                           linewidth=1.2, zorder=5)
+                ax.annotate("+", (d.x, d.y), fontsize=8, color="#e05b8b",
+                            ha="center", va="center", fontweight="bold", zorder=6)
                 ax.text(d.x, d.y + 2.5, str(d.id),
                         fontsize=6, color=TEXT_COLOR,
                         ha="center", va="bottom", zorder=8)
@@ -669,30 +688,49 @@ if rodar:
 
             ax.set_xlim(0, 100)
             ax.set_ylim(0, 100)
-            ax.set_title(f"Melhor solução VRP — {len(best['routes'])} rotas")
+            ax.set_title(
+                f"Geração {gen+1} / {len(history)}   ·   Fitness: {history[gen]:.0f}"
+            )
             ax.legend(fontsize=7, facecolor=PANEL_COLOR, edgecolor=BORDER_COLOR,
                       loc="upper right", ncol=2)
             ax.grid(True, alpha=0.3)
             for spine in ax.spines.values():
                 spine.set_edgecolor(BORDER_COLOR)
             fig.tight_layout(pad=0.6)
-            st.pyplot(fig, use_container_width=True)
+            route_placeholder.pyplot(fig, use_container_width=True)
             plt.close(fig)
 
-        # --- Gráficos de convergência e distribuição ---
-        with col2:
-            # Convergência
+            # Barra de progresso
+            status_placeholder.markdown(f"""
+            <div style="display:flex; align-items:center; gap:0.8rem;
+                        padding:0.25rem 0.3rem; font-size:0.72rem; color:{TEXT_MUTED};">
+                <span>⏱️ <b style="color:{BLUE}">{elapsed:.1f}s</b></span>
+                <span>·</span>
+                <span><b style="color:{GREEN}">{pct:.0f}%</b> concluído</span>
+                <div style="flex:1; background:{BORDER_COLOR}; border-radius:4px; height:3px; overflow:hidden;">
+                    <div style="width:{pct}%; background:linear-gradient(90deg,{GREEN},{BLUE});
+                                height:100%; border-radius:4px; transition:width 0.3s;"></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Convergência parcial
+            xs_h = list(range(gen + 1))
+            ys_h = history[:gen + 1]
             fig_fit, ax_fit = plt.subplots(figsize=(5, 2.5))
-            xs = list(range(len(history)))
-            ax_fit.plot(xs, history, color=TEAL, linewidth=2.2,
+            ax_fit.plot(xs_h, ys_h, color=TEAL, linewidth=2.2,
                         marker="o", markersize=3.0,
                         markerfacecolor=AMBER, markeredgecolor=BG_COLOR,
                         markeredgewidth=0.5, zorder=3)
-            ax_fit.fill_between(xs, history, min(history), alpha=0.18, color=TEAL, zorder=2)
-            margem = (max(history) - min(history)) * 0.15 + 1
-            ax_fit.set_ylim(min(history) - margem, max(history) + margem)
-            ax_fit.axhline(min(history), color=GREEN, linewidth=1.2, linestyle="--",
-                           alpha=0.8, label=f"Mín: {min(history):.0f}")
+            ax_fit.fill_between(xs_h, ys_h, min(ys_h), alpha=0.18, color=TEAL, zorder=2)
+            margem = (max(ys_h) - min(ys_h)) * 0.25 + 1
+            ax_fit.set_ylim(min(ys_h) - margem, max(ys_h) + margem)
+            ax_fit.set_xlim(0, len(history) - 1)
+            ax_fit.axhline(min(ys_h), color=GREEN, linewidth=1.2, linestyle="--",
+                           alpha=0.8, label=f"Mín: {min(ys_h):.0f}")
+            if gen > 0 and ys_h[-1] < ys_h[-2]:
+                ax_fit.scatter([gen], [ys_h[-1]], color=GREEN, s=40, zorder=5,
+                               edgecolors="white", linewidths=0.8)
             ax_fit.legend(fontsize=7, facecolor=PANEL_COLOR, edgecolor=BORDER_COLOR, loc="upper right")
             ax_fit.set_xlabel("Geração")
             ax_fit.set_ylabel("Fitness")
@@ -701,37 +739,38 @@ if rodar:
             for spine in ax_fit.spines.values():
                 spine.set_edgecolor(BORDER_COLOR)
             fig_fit.tight_layout(pad=0.5)
-            st.pyplot(fig_fit, use_container_width=True)
+            fit_placeholder.pyplot(fig_fit, use_container_width=True)
             plt.close(fig_fit)
 
-            # Detalhe por rota
-            fig_bar, ax_bar = plt.subplots(figsize=(5, 2.5))
-            route_labels = [f"V{i+1}" for i in range(len(best["routes"]))]
-            route_dists  = []
-            for v_idx, route in enumerate(best["routes"]):
-                import math
-                dist = 0
-                for si in range(len(route) - 1):
-                    p1, p2 = points[route[si]], points[route[si + 1]]
-                    dist += math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
-                route_dists.append(dist)
+            time.sleep(delay)
 
-            bars = ax_bar.bar(route_labels, route_dists,
-                              color=[VEHICLE_COLORS[i % len(VEHICLE_COLORS)]
-                                     for i in range(len(route_labels))],
-                              edgecolor=BG_COLOR, linewidth=0.5)
-            ax_bar.axhline(vehicle_max_dist, color="#e05b8b", linewidth=1.2,
-                           linestyle="--", alpha=0.8, label=f"Autonomia: {vehicle_max_dist}")
-            ax_bar.legend(fontsize=7, facecolor=PANEL_COLOR, edgecolor=BORDER_COLOR)
-            ax_bar.set_xlabel("Veículo")
-            ax_bar.set_ylabel("Distância")
-            ax_bar.set_title("Distância por veículo")
-            ax_bar.grid(True, axis="y", alpha=0.3)
-            for spine in ax_bar.spines.values():
-                spine.set_edgecolor(BORDER_COLOR)
-            fig_bar.tight_layout(pad=0.5)
-            st.pyplot(fig_bar, use_container_width=True)
-            plt.close(fig_bar)
+        # --- Gráfico de distância por veículo (resultado final) ---
+        route_labels = [f"V{i+1}" for i in range(len(best["routes"]))]
+        route_dists  = []
+        for v_idx, route in enumerate(best["routes"]):
+            dist = 0
+            for si in range(len(route) - 1):
+                p1, p2 = points[route[si]], points[route[si + 1]]
+                dist += math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
+            route_dists.append(dist)
+
+        fig_bar, ax_bar = plt.subplots(figsize=(5, 2.5))
+        ax_bar.bar(route_labels, route_dists,
+                   color=[VEHICLE_COLORS[i % len(VEHICLE_COLORS)]
+                          for i in range(len(route_labels))],
+                   edgecolor=BG_COLOR, linewidth=0.5)
+        ax_bar.axhline(vehicle_max_dist, color="#e05b8b", linewidth=1.2,
+                       linestyle="--", alpha=0.8, label=f"Autonomia: {vehicle_max_dist}")
+        ax_bar.legend(fontsize=7, facecolor=PANEL_COLOR, edgecolor=BORDER_COLOR)
+        ax_bar.set_xlabel("Veículo")
+        ax_bar.set_ylabel("Distância")
+        ax_bar.set_title("Distância por veículo")
+        ax_bar.grid(True, axis="y", alpha=0.3)
+        for spine in ax_bar.spines.values():
+            spine.set_edgecolor(BORDER_COLOR)
+        fig_bar.tight_layout(pad=0.5)
+        bar_placeholder.pyplot(fig_bar, use_container_width=True)
+        plt.close(fig_bar)
 
         # Sequência por veículo
         st.markdown(f"""

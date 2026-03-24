@@ -20,10 +20,16 @@ def sequence_to_vrp_chromosome(sequence, deliveries, vehicles):
             chromosome.append(client_id)
             current_load += demand
         else:
-            chromosome.append(0)
-            vehicle_index += 1
-            chromosome.append(client_id)
-            current_load = demand
+            next_vehicle_index = vehicle_index + 1
+            if next_vehicle_index < len(vehicles):
+                chromosome.append(0)
+                vehicle_index = next_vehicle_index
+                chromosome.append(client_id)
+                current_load = demand
+            else:
+                # Sem mais veículos: sobrecarrega o atual (penalidade no fitness)
+                chromosome.append(client_id)
+                current_load += demand
 
     chromosome.append(0)
     return chromosome

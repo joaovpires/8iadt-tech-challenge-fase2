@@ -25,6 +25,7 @@ def run_ga_vrp(
 
     history = []
     best_solutions = []
+    all_evaluated = []
 
     for _ in range(max_generations):
         evaluated = [
@@ -43,6 +44,7 @@ def run_ga_vrp(
 
         history.append(fitness_values[0])
         best_solutions.append(evaluated[0])
+        all_evaluated.append(evaluated)
 
         new_population = [population[0]]
 
@@ -65,4 +67,4 @@ def run_ga_vrp(
 
         population = new_population
 
-    return history, best_solutions
+    return history, best_solutions, all_evaluated
