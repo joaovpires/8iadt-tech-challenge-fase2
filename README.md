@@ -1,81 +1,239 @@
 # MedRoute — Otimização de Rotas Hospitalares
 
-Projeto desenvolvido para o Tech Challenge Fase 2 da pós-graduação 8IADT (FIAP).
+**Tech Challenge Fase 2 · PosTech IA para Devs · Turma 8IADT · FIAP**
 
-O objetivo é otimizar a distribuição de medicamentos para hospitais e UBSs em São Paulo usando Algoritmo Genético para resolver o VRP (Vehicle Routing Problem). O sistema reduz a distância total percorrida pelos veículos enquanto respeita restrições de capacidade e autonomia.
+Sistema de otimização de rotas para distribuição de medicamentos e insumos entre unidades hospitalares em São Paulo, usando **Algoritmo Genético (VRP)** e **LLMs** para geração de instruções e relatórios.
+
+---
 
 ## Equipe
 
 | Membro  | Responsabilidade |
 |---------|-----------------|
-| Karina  | Algoritmo Genético (seleção, crossover, mutação) |
-| Bruna   | Modelagem de dados e base de pontos de entrega |
-| Matheus | Visualização, script principal, integração e testes e2e |
+| Karina  | Algoritmo Genético — operadores de seleção, crossover e mutação |
+| Bruna   | Modelagem VRP — fitness, restrições de capacidade/autonomia/prioridade |
+| Matheus | Visualização, `main.py`, integração, experimentos, LLM e testes e2e |
 | João    | Infraestrutura e documentação |
 
-## Resultados (dados de teste)
+---
 
-- 15 pontos de entrega, 3 veículos
-- Distância inicial: 150.37 km → otimizada: 110.65 km (**-26.4%**)
+## Resultados
+
+- **6 pontos de entrega**, 2 veículos
+- Distância inicial → otimizada: **melhoria média de ~15%** (varia por configuração)
+- Melhor configuração: Experimento 2 (pop=80, mut=0.05, tournament)
+
+---
+
+## Arquitetura
+
+```
+┌───────────────────────────────────────────────────────────┐
+│                        main.py                            │
+│         (orquestração, CLI, serialização JSON)            │
+└────────────┬───────────────────────────┬──────────────────┘
+             │                           │
+   ┌─────────▼──────────┐     ┌──────────▼──────────────┐
+   │  src/data/         │     │  src/visualization/      │
+   │  models.py         │     │  route_map.py  (Folium)  │
+   │  mock_data.py      │     │  comparison_map.py       │
+   │  distances.py      │     │  charts.py (Matplotlib)  │
+   └─────────┬──────────┘     └─────────────────────────-┘
+             │
+   ┌─────────▼──────────────────────────┐
+   │  src/genetic_algorithm/            │
+   │  ga_adapter.py  (ponte Matheus↔GA) │
+   └─────────┬──────────────────────────┘
+             │
+   ┌─────────▼──────────────────────────────────────────┐
+   │  src/ga/  (código Bruna + Karina)                  │
+   │  algorithm_vrp.py   run_ga_vrp()                   │
+   │  vrp_sequence_population.py                        │
+   │  vrp_adapter.py     evaluate_sequence_solution()   │
+   │  vrp_fitness.py     penalidades de capacidade,     │
+   │                     prioridade, autonomia          │
+   │  crossover.py · mutation.py · selection.py         │
+   └────────────────────────────────────────────────────┘
+             │
+   ┌─────────▼──────────────────────────┐
+   │  src/experiments/main.py           │
+   │  3 experimentos comparativos       │
+   └─────────┬──────────────────────────┘
+             │
+   ┌─────────▼──────────────────────────┐
+   │  src/results/main.py               │
+   │  tabela comparativa + gráficos     │
+   └─────────┬──────────────────────────┘
+             │
+   ┌─────────▼──────────────────────────┐
+   │  src/llm/main.py                   │
+   │  instruções motoristas             │
+   │  relatório executivo               │
+   │  Q&A em linguagem natural          │
+   └────────────────────────────────────┘
+```
+
+---
 
 ## Estrutura do Projeto
 
 ```
 tech-challenge-fase2/
-├── main.py                          # Script principal de execução
-├── requirements.txt                 # Dependências Python
+├── main.py                              # Script principal (CLI)
+├── requirements.txt
 ├── src/
 │   ├── data/
-│   │   ├── models.py                # Dataclasses (DeliveryPoint, Vehicle, Route...)
-│   │   ├── mock_data.py             # Dados de teste (São Paulo)
-│   │   └── distances.py             # Haversine e matriz de distâncias
+│   │   ├── models.py                    # DeliveryPoint, Vehicle, Route, OptimizationResult
+│   │   ├── mock_data.py                 # Dados canônicos (Bruna) + coordenadas SP
+│   │   └── distances.py                # Haversine + matriz de distâncias
+│   ├── ga/                              # Algoritmo Genético (Bruna + Karina)
+│   │   ├── algorithm_vrp.py             # run_ga_vrp() — loop principal do AG
+│   │   ├── vrp_sequence_population.py   # Geração de população por sequência
+│   │   ├── vrp_adapter.py               # sequence → cromossomo VRP
+│   │   ├── vrp_fitness.py               # Função fitness com penalidades
+│   │   ├── vrp_models.py                # Delivery, Vehicle (modelos internos do AG)
+│   │   ├── vrp_utils.py                 # Utilitários (haversine, split_routes...)
+│   │   ├── crossover.py                 # Order crossover (OX)
+│   │   ├── mutation.py                  # Swap mutation
+│   │   └── selection.py                 # Tournament / Top-10 / Roulette
 │   ├── genetic_algorithm/
-│   │   └── ga_mock.py               # AG simplificado (placeholder)
-│   └── visualization/
-│       ├── route_map.py             # Mapa interativo (Folium)
-│       ├── comparison_map.py        # Mapa comparativo antes vs depois
-│       └── charts.py                # Gráficos (convergência, carga, distâncias)
+│   │   └── ga_adapter.py                # Ponte entre modelos do Matheus e AG da Bruna
+│   ├── visualization/
+│   │   ├── route_map.py                 # Mapa interativo (Folium + AntPath)
+│   │   ├── comparison_map.py            # DualMap antes vs depois
+│   │   └── charts.py                    # 4 gráficos Matplotlib
+│   ├── experiments/
+│   │   └── main.py                      # 3 experimentos com configs diferentes
+│   ├── results/
+│   │   └── main.py                      # Análise comparativa + gráficos
+│   └── llm/
+│       └── main.py                      # Instruções, relatórios e Q&A via LLM
 ├── tests/
-│   └── test_pipeline.py             # 17 testes (distâncias, AG, e2e, visualização)
-└── output/                          # Arquivos gerados pela execução
+│   └── test_pipeline.py                 # 17 testes automatizados
+└── output/
     ├── route_map.html
     ├── comparison_map.html
     ├── convergence.png
     ├── distance_comparison.png
     ├── vehicle_load.png
     ├── route_distances.png
-    └── result.json
+    ├── result.json
+    └── experiments/
+        ├── experiment_1.json
+        ├── experiment_2.json
+        ├── experiment_3.json
+        ├── all_experiments.json
+        ├── convergence_comparison.png
+        └── improvement_comparison.png
 ```
+
+---
 
 ## Como rodar
 
+### 1. Instalar dependências
+
 ```bash
 pip install -r requirements.txt
-python main.py
 ```
 
-Outputs gerados na pasta `output/`. Parâmetros opcionais: `--pop-size`, `--generations`, `--mutation-rate`, `--seed`, `--output-dir`.
+### 2. Otimização principal (rota + visualizações)
+
+```bash
+python main.py
+# Parâmetros opcionais:
+python main.py --pop-size 80 --generations 100 --mutation-rate 0.05
+```
+
+### 3. Rodar os 3 experimentos comparativos
+
+```bash
+python -m src.experiments.main
+```
+
+### 4. Analisar e comparar resultados
+
+```bash
+python -m src.results.main
+```
+
+### 5. LLM — instruções, relatório e Q&A
+
+```bash
+# Sem chave OpenAI → usa templates estruturados (modo offline)
+python -m src.llm.main
+
+# Com OpenAI (GPT-4o-mini):
+$env:OPENAI_API_KEY = "sk-..."
+python -m src.llm.main
+```
+
+### 6. Testes automatizados
 
 ```bash
 python -m pytest tests/ -v
 ```
 
-## Tecnologias
+---
 
-- **Python 3.12** — linguagem principal
-- **Folium** — mapas interativos (Leaflet.js)
-- **Matplotlib** — gráficos estáticos
-- **Pytest** — framework de testes
-- **Haversine** — cálculo de distância real entre coordenadas
+## Restrições do VRP implementadas
+
+| Restrição | Implementação |
+|-----------|--------------|
+| Capacidade máxima de carga | Penalidade proporcional ao excesso |
+| Autonomia máxima do veículo | Penalidade proporcional ao excesso |
+| Prioridade de entrega | Penalidade crescente por posição na rota |
+| Múltiplos veículos (VRP) | Cromossomo por sequência + divisão por capacidade |
+| Clientes faltantes | Penalidade alta (5000×) |
+| Clientes duplicados | Penalidade alta (3000×) |
+
+---
+
+## Experimentos AG
+
+| # | Configuração | Melhoria |
+|---|-------------|---------|
+| 1 | pop=30, mut=0.10, tournament | ~10–15% |
+| 2 | pop=80, mut=0.05, tournament | maior precisão |
+| 3 | pop=50, mut=0.30, roulette   | maior diversidade |
+
+Resultados completos em `output/experiments/`.
+
+---
+
+## Integração com LLM
+
+A integração LLM (`src/llm/main.py`) oferece três funcionalidades:
+
+1. **Instruções para motoristas** — roteiro completo por veículo com alertas de prioridade crítica
+2. **Relatório executivo** — métricas de eficiência, comparativo de experimentos, sugestões
+3. **Q&A** — responde perguntas em linguagem natural sobre as rotas otimizadas
+
+Funciona com a API OpenAI (defina `OPENAI_API_KEY`) ou em modo offline com templates estruturados.
+
+---
 
 ## Saídas Geradas
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `route_map.html` | Mapa interativo com rotas otimizadas, marcadores coloridos por prioridade |
-| `comparison_map.html` | Mapa lado a lado: rotas antes vs depois da otimização |
-| `convergence.png` | Curva de convergência do fitness ao longo das gerações |
-| `distance_comparison.png` | Gráfico de barras comparando distância inicial vs otimizada |
-| `vehicle_load.png` | Carga utilizada vs capacidade de cada veículo |
-| `route_distances.png` | Distância percorrida vs autonomia de cada veículo |
-| `result.json` | Resultado completo em formato JSON |
+| `route_map.html` | Mapa interativo com AntPath animado, LayerControl, Fullscreen, MiniMap |
+| `comparison_map.html` | DualMap antes vs depois da otimização |
+| `convergence.png` | Curva de convergência do fitness |
+| `distance_comparison.png` | Barras: distância inicial vs otimizada |
+| `vehicle_load.png` | Carga utilizada vs capacidade por veículo |
+| `route_distances.png` | Distância percorrida vs autonomia por veículo |
+| `result.json` | Resultado completo em JSON |
+| `experiments/convergence_comparison.png` | Convergência dos 3 experimentos sobrepostos |
+| `experiments/improvement_comparison.png` | Melhoria (%) por configuração |
+
+---
+
+## Tecnologias
+
+- **Python 3.12** — linguagem principal
+- **Folium 0.20** — mapas interativos (Leaflet.js + plugins AntPath, MiniMap, Fullscreen)
+- **Matplotlib 3.10** — gráficos estáticos
+- **OpenAI** *(opcional)* — GPT-4o-mini para instruções e relatórios
+- **Pytest** — 17 testes automatizados
+
