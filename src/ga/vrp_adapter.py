@@ -1,4 +1,4 @@
-from src.ga.vrp_fitness import evaluate_vrp_solution
+from vrp_fitness import evaluate_vrp_solution
 
 
 def sequence_to_vrp_chromosome(sequence, deliveries, vehicles):

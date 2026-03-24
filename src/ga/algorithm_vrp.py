@@ -1,12 +1,12 @@
-from src.ga.crossover import order_crossover
-from src.ga.mutation import mutate
-from src.ga.selection import (
+from crossover import order_crossover
+from mutation import mutate
+from selection import (
     tournament_selection,
     top_10_selection,
     roulette_selection,
 )
-from src.ga.vrp_adapter import evaluate_sequence_solution
-from src.ga.vrp_sequence_population import generate_sequence_population
+from vrp_adapter import evaluate_sequence_solution
+from vrp_sequence_population import generate_sequence_population
 
 
 def run_ga_vrp(

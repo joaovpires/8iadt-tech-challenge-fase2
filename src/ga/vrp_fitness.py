@@ -1,4 +1,4 @@
-from src.ga.vrp_utils import (
+from vrp_utils import (
     euclidean,
     split_routes_by_depot,
     build_points,
