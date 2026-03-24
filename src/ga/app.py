@@ -21,7 +21,12 @@ import time
 from algorithm import run_ga_visual
 from fitness import calculate_distance, calculate_distance_att, calculate_fitness
 from cities import generate_cities, load_att48
+<<<<<<< HEAD
 
+=======
+from algorithm_vrp import run_ga_vrp
+from vrp_fitness import evaluate_vrp_solution, calculate_vrp_fitness
+>>>>>>> e96952fb869f9558f7af77d5b49ced95eae47bb1
 
 # =============================================================================
 # PALETA DE CORES — tema escuro inspirado em saúde & logística
